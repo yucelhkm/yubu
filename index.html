@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yerel Ürün Pazarı</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fef8e7;
+      color: #333;
+    }
+    header {
+      background: #ff9800;
+      color: white;
+      padding: 1em;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .container {
+      display: flex;
+    }
+    .sidebar {
+      width: 250px;
+      padding: 20px;
+      background-color: #fff3d4;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      border-right: 1px solid #eee;
+    }
+    .main-content {
+      flex-grow: 1;
+      padding: 20px;
+    }
+    .search-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    input, select, button, textarea {
+      padding: 10px;
+      font-size: 1em;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      cursor: pointer;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .product-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+    .product-card:hover {
+      transform: scale(1.02);
+    }
+    .product-card img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    .product-card h3 {
+      margin: 10px 0 5px;
+    }
+    .product-card p {
+      margin: 0;
+    }
+    .category-tag {
+      background-color: #ffd54f;
+      color: #333;
+      font-size: 0.85em;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    .seller-dropdown select {
+      width: 100%;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #eee;
+      margin-top: 30px;
+    }
+    .contact-button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+      font-size: 24px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Yerel Ürün Pazarı</h1>
+    <p>Yerel üreticilerden doğal ve el emeği ürünler</p>
+  </header>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Ürün adı ara...">
+    <button id="addSellerBtn">Satıcı Ekle</button>
+    <button id="loginSellerBtn">Satıcı Giriş</button>
+  </div>
+  <div class="container">
+    <div class="sidebar">
+      <select id="categoryFilter">
+        <option value="">Tüm Kategoriler</option>
+        <option value="Gıda">Gıda</option>
+        <option value="El işi">El işi</option>
+        <option value="Giyim">Giyim</option>
+      </select>
+      <select id="districtFilter">
+        <option value="">Tüm İlçeler</option>
+        <option value="Merkez">Merkez</option>
+        <option value="İlçe A">İlçe A</option>
+        <option value="İlçe B">İlçe B</option>
+      </select>
+      <div class="seller-dropdown">
+        <label for="sellerSelect"><strong>Satıcılar</strong></label>
+        <select id="sellerSelect">
+          <option value="">Satıcı Seçin</option>
+        </select>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+  </div>
+
+  <!-- Satıcı Ekleme Modal -->
+  <div id="sellerFormModal" class="modal" onclick="closeModal(event, 'sellerFormModal')">
+    <div class="modal-content">
+      <span class="close-btn" onclick="document.getElementById('sellerFormModal').style.display='none'">×</span>
+      <h3>Yeni Satıcı Ekle</h3>
+      <input type="text" id="sellerName" placeholder="Satıcı Adı">
+      <input type="email" id="sellerEmail" placeholder="E-Posta">
+      <input type="password" id="sellerPassword" placeholder="Şifre Oluştur">
+      <select id="sellerCategory">
+        <option value="">Kategori Seçin</option>
+        <option value="Gıda">Gıda</option>
+        <option value="El işi">El işi</option>
+        <option value="Giyim">Giyim</option>
+      </select>
+      <select id="sellerDistrict">
+        <option value="">İlçe Seçin</option>
+        <option value="Merkez">Merkez</option>
+        <option value="İlçe A">İlçe A</option>
+        <option value="İlçe B">İlçe B</option>
+      </select>
+      <button onclick="submitSeller()">Kaydet</button>
+    </div>
+  </div>
+
+  <!-- Satıcı Giriş Modal -->
+  <div id="loginFormModal" class="modal" onclick="closeModal(event, 'loginFormModal')">
+    <div class="modal-content">
+      <span class="close-btn" onclick="document.getElementById('loginFormModal').style.display='none'">×</span>
+      <h3>Satıcı Giriş</h3>
+      <input type="text" id="loginName" placeholder="Satıcı Adı">
+      <input type="password" id="loginPassword" placeholder="Şifre">
+      <button onclick="loginSeller()">Giriş Yap</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Yerel Ürün Pazarı</p>
+  </footer>
+
+  <script>
+    const registeredSellers = [];
+    let currentSeller = null;
+
+    function closeModal(event, modalId) {
+      if (event.target.id === modalId) {
+        document.getElementById(modalId).style.display = 'none';
+      }
+    }
+
+    function submitSeller() {
+      const name = document.getElementById('sellerName').value;
+      const email = document.getElementById('sellerEmail').value;
+      const password = document.getElementById('sellerPassword').value;
+      const category = document.getElementById('sellerCategory').value;
+      const district = document.getElementById('sellerDistrict').value;
+
+      if (!name || !email || !password || !category || !district) {
+        alert("Tüm alanları doldurun.");
+        return;
+      }
+
+      registeredSellers.push({ name, email, password, category, district });
+
+      const sellerSelect = document.getElementById('sellerSelect');
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      sellerSelect.appendChild(option);
+
+      alert("Yeni satıcı başarıyla eklendi.");
+      document.getElementById('sellerFormModal').style.display = 'none';
+    }
+
+    function loginSeller() {
+      const name = document.getElementById('loginName').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      if (!name || !password) {
+        alert("Lütfen kullanıcı adı ve şifre girin.");
+        return;
+      }
+
+      const user = registeredSellers.find(s => s.name === name);
+
+      if (!user) {
+        alert("Bu isimde bir satıcı bulunamadı.");
+        return;
+      }
+
+      if (user.password !== password) {
+        alert("Şifre yanlış.");
+        return;
+      }
+
+      currentSeller = user;
+      alert(`Giriş başarılı. Hoş geldiniz, ${user.name}! Artık ürün ekleyebilirsiniz.`);
+      document.getElementById('loginFormModal').style.display = 'none';
+    }
+
+    document.getElementById('addSellerBtn').addEventListener('click', () => {
+      document.getElementById('sellerFormModal').style.display = 'flex';
+    });
+
+    document.getElementById('loginSellerBtn').addEventListener('click', () => {
+      document.getElementById('loginFormModal').style.display = 'flex';
+    });
+  </script>
+</body>
+</html>
